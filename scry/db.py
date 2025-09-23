@@ -1,10 +1,14 @@
 # create SQLITE database and tables, insert into table
 import sqlite3
 import json
+from pathlib import Path
+from os import makedirs
+
+path = makedirs("./data/", exist_ok=True)
 
 
 def get_connection():
-    return sqlite3.connect("data/cards.db")
+    return sqlite3.connect(Path("./data/cards.db"))
 
 
 def create_table():
