@@ -3,35 +3,55 @@ import math
 from .db import get_connection
 
 
-# TODO: get db stats for the most recent / current request, and print along with that request
-# Could do this by appending a tag for the request when inserting into db, then only querying that tag
-# or saving it into a a temp table? (less efficient)?
+# HACK: when a list request is made from scryfall, cards are added to db with that timestamp added
+# this timestamp is them used to filter queries from db... this means that cards are always added
+# from scryfall before stats are queried, even if they're already in the db.
+# PRO: this means the cards are always up to date (and accurate, i.e. in a set query, it means we
+# have the full set, rather than a partial that may already exist in db)
+# CON: unecessary requests from db, inefficient
+# could a different command (local_stats?) check the db WITHOUT using the timestamp method?
+# (this would mean redesigning all the db queries...)
+#
+def db_stats(stamp=None):
 
-
-def db_stats():
+    # print("db_status: ", stamp)
     try:
         stats = []
 
-        total_cards = get_total_cards()
-        stats.append(f"TOTAL CARDS: {total_cards}")
+        timestamp_query = ""
+        if stamp is not None:
+            timestamp_query = f"WHERE added_at = '{stamp}'"
+
+        # print("timestamp_query: ", timestamp_query)
+        total_cards = get_total_cards(stamp)
+        stats.append(f"Total cards: {total_cards}")
 
         connection = get_connection()
         cursor = connection.cursor()
 
         # Mana Curve of CMC
-        cursor.execute("SELECT cmc, COUNT(*) as Mana FROM cards GROUP BY cmc")
+        cursor.execute(
+            f"SELECT cmc, COUNT(*) as Mana FROM cards {timestamp_query} GROUP BY cmc"
+        )
         curve = cursor.fetchall()
-        stats.append(f"\nMANA CURVE {chart_data(curve, total_cards)}")
+        stats.append(
+            f"\nMANA CURVE ============================\n{chart_data(curve, total_cards)}"
+        )
 
         # Tally of card types
-        cursor.execute(report_card_types()[0], report_card_types()[1])
+        cursor.execute(
+            report_card_types(timestamp_query)[0], report_card_types(timestamp_query)[1]
+        )
         curve = cursor.fetchall()
-        stats.append(f"\nCARD TYPES {chart_data(curve, total_cards)}")
+        stats.append(
+            f"CARD TYPES ============================\n{chart_data(curve, total_cards)}"
+        )
 
         # Prices: highest and average
-        stats.append("\nPRICES")
-        stats.append(f"Average Price is {report_prices(cursor)[1]} EUR")
-        stats.append("\n".join(report_prices(cursor)[0]))
+        stats.append("PRICES ============================\n")
+        stats.append(f"Average Price is {report_prices(cursor,timestamp_query)[1]} EUR")
+        stats.append("\n".join(report_prices(cursor, timestamp_query)[0]))
+        stats.append("\n===========================\n")
 
         connection.close()
 
@@ -41,19 +61,24 @@ def db_stats():
         return ["Error occured talking to database:", {err}]
 
 
-def get_total_cards():
+def get_total_cards(timestamp=None):
     try:
-        connection = get_connection()
-        cursor = connection.cursor()
-        cursor.execute("SELECT COUNT(1) FROM cards")
-        total_cards = cursor.fetchone()[0]
-        connection.close()
-        return total_cards
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            if timestamp is None:
+                cursor.execute("SELECT COUNT(1) FROM cards")
+            else:
+                cursor.execute(
+                    "SELECT COUNT(1) FROM cards WHERE added_at = ?", (timestamp,)
+                )
+            return cursor.fetchone()[0]
     except Exception as err:
         return ["Error occured talking to database getting Total:", {err}]
 
 
 def chart_data(curve_data, total_cards):
+    if total_cards < 1:
+        return "Could not chart data. Not enough cards."
     print_curve = "\n"
     percentage_steps = 2  # each block is x%
     scale = 100 / total_cards
@@ -75,7 +100,9 @@ def chart_data(curve_data, total_cards):
     return print_curve
 
 
-def report_card_types():
+def report_card_types(timestamp_query=None):
+    if timestamp_query is None:
+        timestamp_query = ""
     # chart card types based on type_line
     card_types = [
         "Artifact",
@@ -96,16 +123,20 @@ def report_card_types():
             FROM wanted w
             JOIN cards c
                 ON INSTR(LOWER(COALESCE(c.type_line, '')), TRIM(LOWER(w.type))) > 0
+            {timestamp_query}
             GROUP BY w.type
             ORDER BY n DESC;
         """
     return (query, card_types)
 
 
-def report_prices(cursor):
+def report_prices(cursor, timestamp_query):
+
+    if timestamp_query is None:
+        timestamp_query = ""
 
     cursor.execute(
-        "SELECT name, CAST(json_extract(price,'$.eur') AS REAL) AS price FROM cards ORDER BY price DESC LIMIT 3"
+        f"SELECT name, CAST(json_extract(price,'$.eur') AS REAL) AS price FROM cards {timestamp_query} ORDER BY price DESC LIMIT 3"
     )
     highest_price = cursor.fetchall()
     top_prices = []
@@ -113,8 +144,9 @@ def report_prices(cursor):
     for i, val in enumerate(highest_price):
         top_prices.append(f"  {i+1}. '{val[0]}' at {round(val[1],2)} EUR")
 
-    cursor.execute("SELECT AVG(CAST(json_extract(price,'$.eur') AS REAL)) FROM cards;")
+    cursor.execute(
+        f"SELECT AVG(CAST(json_extract(price,'$.eur') AS REAL)) FROM cards {timestamp_query}"
+    )
     average_price = cursor.fetchone()[0]
-    # stats.append(f"Average price: {round(average_price,2)} EUR")
 
     return top_prices, round(average_price, 2)

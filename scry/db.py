@@ -26,7 +26,8 @@ def create_table():
     mana_cost TEXT,
     cmc INTEGER, 
     price JSON,
-    flavor_text TEXT
+    flavor_text TEXT,
+    added_at TEXT 
     )
     """
     cursor.execute(schema)
@@ -34,30 +35,34 @@ def create_table():
     connection.close()
 
 
-def insert_cards(cards):
+def insert_cards(cards, timestamp):
     try:
         connection = get_connection()
         cursor = connection.cursor()
         rows = []
+        value_placeholder = "?"
         for card in cards:
-            rows.append(
-                (
-                    card["id"],
-                    card["name"],
-                    card["type_line"],
-                    card.get("oracle_text", ""),
-                    json.dumps(card.get("color_identity", {})),
-                    json.dumps(card.get("colors", {})),
-                    card.get("set", ""),
-                    card.get("mana_cost", ""),
-                    card["cmc"],
-                    json.dumps(card.get("prices", {})),
-                    card.get("flavor_text", ""),
-                ),
-            )
-        # TODO: check if there is a better/more secure way to insert values than '?', which feels insecure. Named variables?
+            insert_values = [
+                card["id"],
+                card["name"],
+                card["type_line"],
+                card.get("oracle_text", ""),
+                json.dumps(card.get("color_identity", {})),
+                json.dumps(card.get("colors", {})),
+                card.get("set", ""),
+                card.get("mana_cost", ""),
+                card["cmc"],
+                json.dumps(card.get("prices", {})),
+                card.get("flavor_text", ""),
+                timestamp,
+            ]
+            rows.append(insert_values)
+            #
+            # TODO: check if there is a better/more secure way to insert values than '?', which feels insecure. Named variables?
+            #
+            value_placeholder = ",".join("?" * len(insert_values))
         cursor.executemany(
-            "INSERT OR REPLACE INTO cards VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            f"INSERT OR REPLACE INTO cards VALUES ({value_placeholder})",
             rows,
         )
         connection.commit()

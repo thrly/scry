@@ -2,6 +2,7 @@
 # query and return stats
 
 
+import datetime
 from sys import argv
 from . import (
     create_table,
@@ -27,15 +28,21 @@ def main():
                 query = ""
             # get a single random card, based on search parameters
             card = get_random_card(query) or []
-            insert_cards(card)
+            insert_cards(card, get_timestamp())
             print(get_total_cards(), "cards currently in database.")
 
         elif req_type == "list":
             if len(argv) > 2:
                 search_param = argv[2]
                 card_list = get_card_list(search_param) or []
-                insert_cards(card_list)
+                stamp = get_timestamp()
+                insert_cards(card_list, stamp)
                 print(get_total_cards(), "cards currently in database.")
+                print(
+                    f"================================================\nSTATS for '{search_param}':"
+                )
+                print_stats(stamp)
+
             else:
                 print("Lists need a query parameter (i.e. 'color:black set:BLB')")
 
@@ -43,12 +50,22 @@ def main():
             clear_database()
 
         elif req_type == "stats":
-            stats = db_stats()
-            for s in stats:
-                print(s)
-
+            print(
+                "================================================\nSTATS for ALL cards in database:"
+            )
+            print_stats()
     else:
         print("No valid search parameters.")
+
+
+def print_stats(timestamp=None):
+    stats = db_stats(timestamp)
+    for s in stats:
+        print(s)
+
+
+def get_timestamp():
+    return datetime.datetime.now()
 
 
 if __name__ == "__main__":
