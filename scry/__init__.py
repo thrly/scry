@@ -7,6 +7,7 @@ __all__ = [
     "db_stats",
     "get_total_cards",
     "clear_database",
+    "set_codes",
 ]
 
 from .db import (
@@ -15,5 +16,5 @@ from .db import (
     get_connection,
     clear_database,
 )
-from .request import get_random_card, get_card_list
+from .request import get_random_card, get_card_list, set_codes
 from .db_queries import db_stats, get_total_cards

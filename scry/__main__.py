@@ -2,7 +2,7 @@
 # query and return stats
 
 
-import datetime
+from datetime import datetime
 from sys import argv
 from . import (
     create_table,
@@ -12,6 +12,7 @@ from . import (
     db_stats,
     get_total_cards,
     clear_database,
+    set_codes,
 )
 
 
@@ -46,6 +47,14 @@ def main():
             else:
                 print("Lists need a query parameter (i.e. 'color:black set:BLB')")
 
+        elif req_type == "setcodes":
+            for set_code in set_codes():
+                if set_code[3] == "expansion" or set_code[3] == "commander":
+                    # extract year from YYYY-MM-DD
+                    date = datetime.fromisoformat(set_code[2])
+                    print(
+                        f"{set_code[0]} : {set_code[1]}\t{set_code[4]} cards\t({date.year})"
+                    )
         elif req_type == "clear":
             clear_database()
 
@@ -65,7 +74,7 @@ def print_stats(timestamp=None):
 
 
 def get_timestamp():
-    return datetime.datetime.now()
+    return datetime.now()
 
 
 if __name__ == "__main__":

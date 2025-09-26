@@ -96,3 +96,43 @@ def show_warnings(res):
     warnings = res.get("warnings")
     if warnings:
         print(f"WARNING [LIST REQ]: {warnings}")
+
+
+def set_codes():
+    endpoint = "/sets"
+
+    sleep(0.1)  # just in case we ever call this in a loop
+
+    try:
+        req_url = url + endpoint
+        res = requests.get(req_url, headers=headers, timeout=3)
+        res.raise_for_status()
+
+        if res.status_code == 200:
+            response = res.json()
+
+            show_warnings(response)
+
+            setlist_data = response.get("data", [])
+
+            setlist = []
+            for set_item in setlist_data:
+                setlist.append(
+                    [
+                        set_item.get("code").upper(),
+                        set_item.get("name"),
+                        set_item.get("released_at"),
+                        set_item.get("set_type"),
+                        set_item.get("card_count"),
+                    ]
+                )
+            print(type(setlist))
+            return setlist
+
+        else:
+            print("Something may have gone wrong... Status Code: ", res.status_code)
+            return []
+
+    except requests.exceptions.RequestException as err:
+        print("Setlist ERROR: ", err)
+        return []
