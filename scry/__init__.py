@@ -8,13 +8,10 @@ __all__ = [
     "get_total_cards",
     "clear_database",
     "set_codes",
+    "transform_card",
 ]
 
-from .db import (
-    create_table,
-    insert_cards,
-    get_connection,
-    clear_database,
-)
+from .db_setup import create_table, get_connection, clear_database
+from .db_insert import insert_cards, transform_card
 from .request import get_random_card, get_card_list, set_codes
 from .db_queries import db_stats, get_total_cards
