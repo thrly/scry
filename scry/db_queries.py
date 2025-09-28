@@ -1,6 +1,5 @@
 import math
-
-from .db import get_connection
+from .db_setup import get_connection
 
 
 # HACK: when a list request is made from scryfall, cards are added to db with that timestamp added
@@ -12,7 +11,7 @@ from .db import get_connection
 # could a different command (local_stats?) check the db WITHOUT using the timestamp method?
 # (this would mean redesigning all the db queries...)
 #
-def db_stats(stamp=None):
+def db_stats(stamp=None) -> list:
 
     # print("db_status: ", stamp)
     try:
@@ -61,7 +60,7 @@ def db_stats(stamp=None):
         return ["Error occured talking to database:", {err}]
 
 
-def get_total_cards(timestamp=None):
+def get_total_cards(timestamp=None) -> str:
     try:
         with get_connection() as connection:
             cursor = connection.cursor()
@@ -73,7 +72,7 @@ def get_total_cards(timestamp=None):
                 )
             return cursor.fetchone()[0]
     except Exception as err:
-        return ["Error occured talking to database getting Total:", {err}]
+        return f"Error occured talking to database getting Total: {err}"
 
 
 def chart_data(curve_data, total_cards):
@@ -130,11 +129,9 @@ def report_card_types(timestamp_query=None):
     return (query, card_types)
 
 
-def report_prices(cursor, timestamp_query):
-
-    if timestamp_query is None:
-        timestamp_query = ""
-
+def report_prices(cursor, timestamp_query: str):
+    # if timestamp_query is None:
+    #     timestamp_query = ""
     cursor.execute(
         f"SELECT name, CAST(json_extract(price,'$.eur') AS REAL) AS price FROM cards {timestamp_query} ORDER BY price DESC LIMIT 3"
     )

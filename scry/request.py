@@ -9,7 +9,7 @@ headers = {"User-Agent": "scry-thrly/0.1", "Accept": "*/*"}
 # NOTE: scryfall returns an 'object : card/list` which could be used to detemine how to display/add single/lists of cards
 
 
-def get_random_card(query):
+def get_random_card(query: str) -> list:
     clean_query = urllib.parse.quote(query)
     endpoint = "/cards/random/?q="
 
@@ -35,9 +35,10 @@ def get_random_card(query):
             return []
     except requests.exceptions.RequestException as err:
         print("ERROR: ", err)
+        return []
 
 
-def get_card_list(query):
+def get_card_list(query: str) -> list:
     clean_query = urllib.parse.quote(query)
     endpoint = "/cards/search?q="
 
@@ -90,6 +91,7 @@ def get_card_list(query):
             return []
     except requests.exceptions.RequestException as err:
         print("ERROR: ", err)
+        return []
 
 
 def show_warnings(res):
@@ -98,7 +100,7 @@ def show_warnings(res):
         print(f"WARNING [LIST REQ]: {warnings}")
 
 
-def set_codes():
+def set_codes() -> list:
     endpoint = "/sets"
 
     sleep(0.1)  # just in case we ever call this in a loop
@@ -108,31 +110,33 @@ def set_codes():
         res = requests.get(req_url, headers=headers, timeout=3)
         res.raise_for_status()
 
+        response = res.json()
+
+        show_warnings(response)
+
         if res.status_code == 200:
-            response = res.json()
-
-            show_warnings(response)
-
-            setlist_data = response.get("data", [])
+            setlist_data = response.get("data")
 
             setlist = []
-            for set_item in setlist_data:
+
+            # TODO: like the card_transform, this would be better to define as a dict, rather than a list
+            for set_info in setlist_data:
                 setlist.append(
                     [
-                        set_item.get("code").upper(),
-                        set_item.get("name"),
-                        set_item.get("released_at"),
-                        set_item.get("set_type"),
-                        set_item.get("card_count"),
+                        set_info.get("code"),
+                        set_info.get("name"),
+                        set_info.get("released_at"),
+                        set_info.get("set_type"),
+                        set_info.get("card_count"),
                     ]
                 )
-            print(type(setlist))
             return setlist
-
         else:
-            print("Something may have gone wrong... Status Code: ", res.status_code)
+            print(
+                "Something may have gone wrong getting the list of sets... Status Code: ",
+                res.status_code,
+            )
             return []
-
     except requests.exceptions.RequestException as err:
         print("Setlist ERROR: ", err)
         return []

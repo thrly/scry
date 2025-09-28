@@ -53,7 +53,7 @@ def main():
                     # extract year from YYYY-MM-DD
                     date = datetime.fromisoformat(set_code[2])
                     print(
-                        f"{set_code[0]} : {set_code[1]}\t{set_code[4]} cards\t({date.year})"
+                        f"{set_code[0]} : {set_code[1]}\t{set_code[4]} cards\t{date.year}"
                     )
         elif req_type == "clear":
             clear_database()
