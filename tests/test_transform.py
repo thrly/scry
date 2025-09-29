@@ -9,22 +9,21 @@ def test_transform_card_pulls_correct_values():
 
     card = transform_card(sample_card(), datetime.datetime.now())
 
-    assert card[0] == "6a0b230b-d391-4998-a3f7-7b158a0ec2cd"  # id
-    assert card[1] == "Llanowar Elves"  # name
-    assert card[2] == "Creature — Elf Druid"  # type_line
-    assert card[3] == "{T}: Add {G}."  # oracle_text
-    assert card[4] == '["G"]'  # color_identity
-    assert card[5] == '["G"]'  # colors
-    assert card[6] == "fdn"  # set
-    assert card[7] == "{G}"  # mana_cost
-    assert card[8] == 1.0  # cmc
-    # TODO: assertion to check prices
+    assert card["id"] == "6a0b230b-d391-4998-a3f7-7b158a0ec2cd"  # id
+    assert card["name"] == "Llanowar Elves"  # name
+    assert card["type_line"] == "Creature — Elf Druid"  # type_line
+    assert card["oracle_text"] == "{T}: Add {G}."  # oracle_text
+    assert card["color_identity"] == '["G"]'  # color_identity
+    assert card["colors"] == '["G"]'  # colors
+    assert card["set_code"] == "fdn"  # set
+    assert card["mana_cost"] == "{G}"  # mana_cost
+    assert card["cmc"] == 1.0  # cmc
     assert (
-        card[9]
+        card["price"]
         == '{"usd": "0.23", "usd_foil": "3.20", "usd_etched": null, "eur": "0.22", "eur_foil": "0.37", "tix": "0.03"}'
     )  # prices
     assert (
-        card[10]
+        card["flavor_text"]
         == "The elves of the Llanowar forest have defended it for generations. It is their sacred duty to keep outside influences from corrupting their ancestral home."
     )  # flavor_text
-    assert type(card[11]) is datetime.datetime  # timestamp
+    assert type(card["added_at"]) is datetime.datetime  # timestamp
