@@ -3,3 +3,5 @@
 data/cards.db
 
 .coverage
+tests.db
+.pytest_cache

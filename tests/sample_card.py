@@ -1,4 +1,4 @@
-def sample_card() -> dict:
+def sample_card():
     true = True
     false = False
     null = None  # HACK: json into a dict?

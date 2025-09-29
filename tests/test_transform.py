@@ -21,14 +21,7 @@ def test_transform_card_pulls_correct_values():
     # TODO: assertion to check prices
     assert (
         card[9]
-        == """{
-        "usd": "0.23",
-        "usd_foil": "3.20",
-        "usd_etched": null,
-        "eur": "0.22",
-        "eur_foil": "0.37",
-        "tix": "0.03",
-    }"""
+        == '{"usd": "0.23", "usd_foil": "3.20", "usd_etched": null, "eur": "0.22", "eur_foil": "0.37", "tix": "0.03"}'
     )  # prices
     assert (
         card[10]
