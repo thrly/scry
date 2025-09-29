@@ -7,12 +7,12 @@ from os import makedirs
 path = makedirs("./data/", exist_ok=True)
 
 
-def get_connection():
+# TODO: this should accept an argument to enable "/tests/test.db"
+def db_connect():
     return sqlite3.connect(Path("./data/cards.db"))
 
 
-def create_table():
-    connection = get_connection()
+def create_table(connection):
     cursor = connection.cursor()
     schema = """
     CREATE TABLE IF NOT EXISTS cards(
@@ -32,14 +32,13 @@ def create_table():
     """
     cursor.execute(schema)
     connection.commit()
-    connection.close()
 
 
 def clear_database() -> None:
     check = input("This will delete your database, are you sure? (y/N): ")
     if check.lower() == "y":
         try:
-            connection = get_connection()
+            connection = db_connect()
             cursor = connection.cursor()
             cursor.execute("DROP TABLE IF EXISTS cards")
             cursor.close()

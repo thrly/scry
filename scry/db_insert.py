@@ -1,11 +1,9 @@
 import json
 from datetime import datetime
-from .db_setup import get_connection
 
 
-def insert_cards(cards: list, timestamp: datetime) -> None:
+def insert_cards(cards: list, timestamp: datetime, connection) -> int:
     try:
-        connection = get_connection()
         cursor = connection.cursor()
         rows = []
         value_placeholder = "?"
@@ -18,14 +16,15 @@ def insert_cards(cards: list, timestamp: datetime) -> None:
             rows,
         )
         connection.commit()
-        connection.close()
         if len(cards) > 1:
             print(f"Added {len(cards)} cards into database.")
         else:
             print(f"Added '{cards[0]['name']}' into database.")
 
+        return len(cards)
     except Exception as err:
         print(f"Error occured talking to database: {err}")
+        return 0
 
 
 def transform_card(card_data: dict, timestamp: datetime) -> list:
