@@ -1,7 +1,7 @@
 import requests
 from time import sleep
 import urllib.parse
-
+from .loading import Loading
 
 url = "https://api.scryfall.com"
 headers = {"User-Agent": "scry-thrly/0.1", "Accept": "*/*"}
@@ -14,6 +14,7 @@ def get_random_card(query: str) -> list:
     endpoint = "/cards/random/?q="
 
     try:
+
         res = requests.get(url + endpoint + clean_query, headers=headers, timeout=3)
         res.raise_for_status()
 
@@ -39,12 +40,16 @@ def get_random_card(query: str) -> list:
 
 
 def get_card_list(query: str) -> list:
+
     clean_query = urllib.parse.quote(query)
     endpoint = "/cards/search?q="
 
     sleep(0.1)  # just in case we ever call this in a loop
 
     try:
+        # loading animation
+        loading = Loading().start()
+
         req_url = url + endpoint + clean_query
         # print(f"Requesting from: {req_url}")
         res = requests.get(req_url, headers=headers, timeout=3)
@@ -84,6 +89,7 @@ def get_card_list(query: str) -> list:
             except requests.exceptions.RequestException as err:
                 print("ERROR subsequent pages: ", err)
 
+        loading.end()
         if res.status_code == 200:
             return card_list
         else:
