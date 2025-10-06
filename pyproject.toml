@@ -1,0 +1,25 @@
+[project]
+name = "scry"
+version = "0.1"
+dependencies = [
+  "requests",
+  "pytest",
+  # should pytest be in [project.optional-dependencies]?
+]
+requires-python = ">= 3.12"
+readme = "README.md"
+
+# defines the command and script that will be used to run
+[project.scripts]
+scry = "scry.cli:main"
+
+[project.urls]
+repository = "https://github.com/thrly/scry"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["scry*"]

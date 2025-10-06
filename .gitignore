@@ -2,6 +2,10 @@
 **/*.pyc
 data/cards.db
 
+build/
+
+*.egg-info
+
 .coverage
 tests.db
 .pytest_cache

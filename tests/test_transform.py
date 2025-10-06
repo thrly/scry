@@ -1,7 +1,7 @@
 # test the clean-up/transofrm of card data ready for inserting into
 
 import datetime
-from scry.db_insert import transform_card
+from src.scry.db_insert import transform_card
 from tests.sample_card import sample_card
 
 

@@ -1,4 +1,4 @@
-from scry.request import get_random_card
+from src.scry.request import get_random_card
 
 
 def test_random_card_request():

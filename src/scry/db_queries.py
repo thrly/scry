@@ -32,22 +32,20 @@ def db_stats(connection, stamp=None) -> list:
             f"SELECT cmc, COUNT(*) as Mana FROM cards {timestamp_query} GROUP BY cmc"
         )
         curve = cursor.fetchall()
-        stats.append(
-            f"\nMANA CURVE ============================\n{chart_data(curve, total_cards)}"
-        )
+        stats.append(f"\n## MANA CURVE\n{chart_data(curve, total_cards)}")
 
         # Tally of card types
         cursor.execute(
             report_card_types(timestamp_query)[0], report_card_types(timestamp_query)[1]
         )
         curve = cursor.fetchall()
-        stats.append(
-            f"CARD TYPES ============================\n{chart_data(curve, total_cards)}"
-        )
+        stats.append(f"## CARD TYPES\n{chart_data(curve, total_cards)}")
 
         # Prices: highest and average
-        stats.append("PRICES ============================\n")
-        stats.append(f"Average Price is {report_prices(cursor,timestamp_query)[1]} EUR")
+        stats.append("## PRICES\n")
+        stats.append(
+            f" Average Price is {report_prices(cursor,timestamp_query)[1]} EUR"
+        )
         stats.append("\n".join(report_prices(cursor, timestamp_query)[0]))
         stats.append("\n===========================\n")
 
@@ -127,12 +125,15 @@ def report_card_types(timestamp_query=None):
 
 
 def report_prices(cursor, timestamp_query: str):
+    # TODO: this only takes into account non-foil card prices... if foil prices are
+    # available (not always), they should also be included and aaveraged, though it might
+    # skew the hightest prices?
     cursor.execute(
         f"SELECT name, CAST(json_extract(price,'$.eur') AS REAL) AS price FROM cards {timestamp_query} ORDER BY price DESC LIMIT 3"
     )
     highest_price = cursor.fetchall()
     top_prices = []
-    top_prices.append("Most expensive cards:")
+    top_prices.append(" Most expensive cards:")
     for i, val in enumerate(highest_price):
         top_prices.append(f"  {i+1}. '{val[0]}' at {round(val[1],2)} EUR")
 

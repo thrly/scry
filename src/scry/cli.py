@@ -23,6 +23,7 @@ def main():
         create_table(connection)
 
         if len(argv) > 1:
+            # TODO: swap argv for argparse
             req_type = argv[1]
             # use argument inputs from CLI: random (single card) or list (multiple cards)
             if req_type == "random":
@@ -68,7 +69,9 @@ def main():
                 )
                 print_stats(connection)
         else:
-            print("No valid search parameters.")
+            print(
+                "No valid search parameters. Try `scry random` or `scry list '<scryfall query>'"
+            )
     except Exception as err:
         print("Error in __main__: ", err)
     finally:
