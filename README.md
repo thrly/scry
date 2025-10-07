@@ -8,12 +8,18 @@ Clone and install with `pipx install scry`
 
 ## use
 
-- Draw a random card and add it to your database with `scry random`
-- Get a list of cards based on a scryfall [search query](https://scryfall.com/docs/syntax) and add them to your database:
-  - `scry list "set:blb"` returns unique cards from the Bloomburrow set and shows stats for that list.
-- Request a list of set releases with: `scry setcodes`
-- Return stats for your entire database: `scry stats`
-- (Optional:) Clear your database: `scry clear`
+- Request a reference list of set releases with: `scry setcodes`
+- Get stats for a specific set:
+  - `scry set BLB` returns all cards from the _Bloomburrow_ set.
+- Get stats for cards based on a scryfall [search query](https://scryfall.com/docs/syntax):
+  - `scry search id:orzhov type:land legal:modern` returns all unique Orzhov Land cards that are legal in Modern format, and shows stats for that list.
+- Get help for cli commands with `scry --help`
+
+### local database
+
+Scry creates a local sqlite database and adds your queried cards to it. This means you can build a larger collection of cards by executing multiple searches, and then view stats for the entire database with `scry stats`
+
+In order to clear your database (for instance, to start a fresh collection to view stats on), run `scry clear` and confirm at the prompt.
 
 ## about
 
