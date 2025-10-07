@@ -15,7 +15,7 @@ def get_random_card(query: str) -> list:
 
     try:
 
-        res = requests.get(url + endpoint + clean_query, headers=headers, timeout=3)
+        res = requests.get(url + endpoint + clean_query, headers=headers, timeout=5)
         res.raise_for_status()
 
         card = res.json()
