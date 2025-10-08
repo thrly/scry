@@ -32,7 +32,7 @@ def db_stats(connection, stamp=None) -> list:
             f"SELECT cmc, COUNT(*) as Mana FROM cards {timestamp_query} GROUP BY cmc"
         )
         curve = cursor.fetchall()
-        stats.append(f"\nMANA CURVE\n{chart_data(curve, total_cards)}")
+        stats.append(f"MANA CURVE:\n{chart_data(curve, total_cards)}")
 
         # Colour distribution
         cursor.execute(
@@ -50,7 +50,7 @@ def db_stats(connection, stamp=None) -> list:
         coloured_results = [[scryfall_colours(id), count] for id, count in curve]
 
         stats.append(
-            f"\nCOLOUR DISTRIBUTION\n{chart_data(coloured_results, total_cards)}"
+            f"COLOUR DISTRIBUTION:\n{chart_data(coloured_results, total_cards)}"
         )
 
         # Tally of card types
@@ -58,15 +58,15 @@ def db_stats(connection, stamp=None) -> list:
             report_card_types(timestamp_query)[0], report_card_types(timestamp_query)[1]
         )
         curve = cursor.fetchall()
-        stats.append(f"CARD TYPES\n{chart_data(curve, total_cards)}")
+        stats.append(f"CARD TYPES:\n{chart_data(curve, total_cards)}")
 
         # Prices: highest and average
-        stats.append("PRICES\n")
+        stats.append("PRICES:\n")
         stats.append(
-            f" Average Price is {report_prices(cursor,timestamp_query)[1]} EUR\n"
+            f"  Average Price is {report_prices(cursor,timestamp_query)[1]} EUR\n"
         )
         stats.append("\n".join(report_prices(cursor, timestamp_query)[0]))
-
+        stats.append("")
         return stats
 
     except Exception as err:
@@ -151,7 +151,7 @@ def report_prices(cursor, timestamp_query: str):
     )
     highest_price = cursor.fetchall()
     top_prices = []
-    top_prices.append(" Most expensive cards:")
+    top_prices.append("  Most expensive cards:")
     # check for duplicate cards appearing in expensive list
     # this happens when variation prints are equally sought after
     # do not append duplicate cards to the top

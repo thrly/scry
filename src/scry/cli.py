@@ -144,13 +144,19 @@ def handle_set(args, db_connection):
         print(f"Stats for {current_set_name} ({current_set_code}):")
     else:
         query_setcode = str(args.set_query)
-        print(f"Stats for {lookup_set_info("name", args.set_query.upper())}")
+        print(
+            f"Stats for \033[1m{lookup_set_info("name", args.set_query.upper())}\033[0m"
+        )
 
     query = f"set:{query_setcode} unique:prints"  # unique:prints includes variations within set
 
-    print(f"  Released: {lookup_set_info("release_date", query_setcode.upper())}")
+    print(
+        f" \x1b[3m Released: {lookup_set_info("release_date", query_setcode.upper())}"
+    )
 
-    print(f"  {lookup_set_info("card_count", query_setcode.upper())} cards in set")
+    print(
+        f"  {lookup_set_info("card_count", query_setcode.upper())} cards in set\033[0m"
+    )
 
     card_list = get_card_list(query) or []
     stamp = get_timestamp()
