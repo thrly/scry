@@ -88,6 +88,22 @@ def get_total_cards(connection, timestamp=None) -> int | str:
         return f"Error occured talking to database getting Total: {err}"
 
 
+def get_unique_cards(connection, timestamp=None) -> int | str:
+    try:
+        cursor = connection.cursor()
+
+        if timestamp is None:
+            cursor.execute("SELECT COUNT(1) FROM cards")
+        else:
+            cursor.execute(
+                "SELECT COUNT(DISTINCT lower(name)) FROM cards WHERE added_at = ?",
+                (timestamp,),
+            )
+        return cursor.fetchone()[0]
+    except Exception as err:
+        return f"Error occured talking to database getting Total: {err}"
+
+
 def chart_data(curve_data, total_cards):
     if total_cards < 1:
         return "Could not chart data. Not enough cards."
