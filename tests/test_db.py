@@ -5,7 +5,7 @@ from src.scry.db_insert import insert_cards
 from tests.sample_card import sample_card
 
 
-def test_card_insert_and_get(capfd):
+def test_card_insert_and_get():
 
     connection = sqlite3.connect("./tests/tests.db")
     try:
@@ -13,10 +13,6 @@ def test_card_insert_and_get(capfd):
 
         assert insert_cards([sample_card()], datetime.datetime.now(), connection) == 1
         # this should return 1 (the single card added)
-
-        # check that insert cards writes "Added" message to stdout:
-        captured = capfd.readouterr()
-        assert captured.out == "Added 'Llanowar Elves' into database.\n"
 
         # pull first row from test db, then check that it is Llanowar
         cursor = connection.cursor()

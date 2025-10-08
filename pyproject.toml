@@ -11,7 +11,7 @@ readme = "README.md"
 
 # defines the command and script that will be used to run
 [project.scripts]
-scry = "scry.cli:main"
+scry = "scry.main:main"
 
 [project.urls]
 repository = "https://github.com/thrly/scry"
