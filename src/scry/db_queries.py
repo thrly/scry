@@ -23,7 +23,7 @@ def db_stats(connection, stamp=None) -> list:
 
         # print("timestamp_query: ", timestamp_query)
         total_cards = get_total_cards(connection, stamp)
-        stats.append(f"Total cards: {total_cards}")
+        # stats.append(f"Stats for {total_cards} cards")
 
         cursor = connection.cursor()
 
@@ -32,22 +32,40 @@ def db_stats(connection, stamp=None) -> list:
             f"SELECT cmc, COUNT(*) as Mana FROM cards {timestamp_query} GROUP BY cmc"
         )
         curve = cursor.fetchall()
-        stats.append(f"\n## MANA CURVE\n{chart_data(curve, total_cards)}")
+        stats.append(f"\nMANA CURVE\n{chart_data(curve, total_cards)}")
+
+        # Colour distribution
+        cursor.execute(
+            f"""SELECT 
+                value as color_identity,
+                COUNT(*) AS color_count
+                FROM cards,
+                json_each(cards.color_identity) {timestamp_query}
+                GROUP BY value
+                ORDER BY color_count DESC
+        """
+        )
+
+        curve = cursor.fetchall()
+        coloured_results = [[scryfall_colours(id), count] for id, count in curve]
+
+        stats.append(
+            f"\nCOLOUR DISTRIBUTION\n{chart_data(coloured_results, total_cards)}"
+        )
 
         # Tally of card types
         cursor.execute(
             report_card_types(timestamp_query)[0], report_card_types(timestamp_query)[1]
         )
         curve = cursor.fetchall()
-        stats.append(f"## CARD TYPES\n{chart_data(curve, total_cards)}")
+        stats.append(f"CARD TYPES\n{chart_data(curve, total_cards)}")
 
         # Prices: highest and average
-        stats.append("## PRICES\n")
+        stats.append("PRICES\n")
         stats.append(
-            f" Average Price is {report_prices(cursor,timestamp_query)[1]} EUR"
+            f" Average Price is {report_prices(cursor,timestamp_query)[1]} EUR\n"
         )
         stats.append("\n".join(report_prices(cursor, timestamp_query)[0]))
-        stats.append("\n===========================\n")
 
         return stats
 
@@ -129,13 +147,25 @@ def report_prices(cursor, timestamp_query: str):
     # available (not always), they should also be included and aaveraged, though it might
     # skew the hightest prices?
     cursor.execute(
-        f"SELECT name, CAST(json_extract(price,'$.eur') AS REAL) AS price FROM cards {timestamp_query} ORDER BY price DESC LIMIT 3"
+        f"SELECT name, CAST(json_extract(price,'$.eur') AS REAL) AS price FROM cards {timestamp_query} ORDER BY price DESC LIMIT 9"
     )
     highest_price = cursor.fetchall()
     top_prices = []
     top_prices.append(" Most expensive cards:")
-    for i, val in enumerate(highest_price):
-        top_prices.append(f"  {i+1}. '{val[0]}' at {round(val[1],2)} EUR")
+    # check for duplicate cards appearing in expensive list
+    # this happens when variation prints are equally sought after
+    # do not append duplicate cards to the top
+
+    top_price_dict = {}
+    for item in highest_price:
+        if item[0] not in top_price_dict.keys():
+            top_price_dict[item[0]] = item[1]
+
+    for card, price in top_price_dict.items():
+        card_price_info = f"  - {card:<35} {round(price,2):>10} EUR"
+        top_prices.append(card_price_info)
+        if len(top_prices) == 4:  # stop after three top prices + 1 for heading
+            break
 
     cursor.execute(
         f"SELECT AVG(CAST(json_extract(price,'$.eur') AS REAL)) FROM cards {timestamp_query}"
@@ -143,3 +173,8 @@ def report_prices(cursor, timestamp_query: str):
     average_price = cursor.fetchone()[0]
 
     return top_prices, round(average_price, 2)
+
+
+def scryfall_colours(reference: str) -> str:
+    colour_codes = {"R": "Red", "G": "Green", "U": "Blue", "B": "Black", "W": "White"}
+    return colour_codes.get(reference, "Unknown")
