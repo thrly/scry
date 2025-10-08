@@ -1,6 +1,8 @@
 import argparse
 from datetime import datetime
 
+from scry.db_queries import get_unique_cards
+from scry.loading import Loading
 from scry.request import find_current_release
 from . import (
     get_random_card,
@@ -150,18 +152,23 @@ def handle_set(args, db_connection):
 
     query = f"set:{query_setcode} unique:prints"  # unique:prints includes variations within set
 
-    print(
-        f" \x1b[3m Released: {lookup_set_info("release_date", query_setcode.upper())}"
-    )
-
-    print(
-        f"  {lookup_set_info("card_count", query_setcode.upper())} cards in set\033[0m"
-    )
-
     card_list = get_card_list(query) or []
     stamp = get_timestamp()
 
     insert_cards(card_list, stamp, connection)
+
+    # loading animation
+    loading = Loading().start()
+    set_release_details = []
+    set_release_details.append(lookup_set_info("release_date", query_setcode.upper()))
+    set_release_details.append(lookup_set_info("card_count", query_setcode.upper()))
+    set_release_details.append(get_unique_cards(connection, stamp))
+    loading.end()
+
+    print(
+        f" \x1b[3m Released: {set_release_details[0]}\n  {set_release_details[1]} cards in set ({set_release_details[2]} unique cards)\n \033[0m"
+    )
+
     print_stats(connection, stamp)
 
 
@@ -203,7 +210,7 @@ def print_stats(connection, timestamp=None):
 
 def format_set_info(set_details) -> str:
     date = datetime.fromisoformat(set_details["release_date"])
-    return f"{set_details["set_code"]: <5} {set_details["name"]:<38} {set_details["card_count"]:>6} cards {date.year:>10}"
+    return f"{set_details["set_code"]: <5} {set_details["name"]:<45} {set_details["card_count"]:>6} cards {date.year:>10}"
 
 
 def lookup_set_info(info: str, set_code: str) -> str:
