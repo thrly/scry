@@ -171,7 +171,8 @@ def set_codes() -> list:
             for set_info in setlist_data:
                 released = set_info.get("released_at")
                 set_type = set_info.get("set_type")
-                if set_type == "expansion" or set_type == "commander":
+                valid_sets = ["expansion", "commander", "draft_innovation"]
+                if set_type in valid_sets:
                     setlist.append(
                         {
                             "set_code": set_info.get("code").upper(),
