@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 from time import sleep
 import urllib.parse
@@ -7,6 +8,9 @@ url = "https://api.scryfall.com"
 headers = {"User-Agent": "scry-thrly/0.1", "Accept": "*/*"}
 
 # NOTE: scryfall returns an 'object : card/list` which could be used to detemine how to display/add single/lists of cards
+
+#################
+# Return a random card (optional search parameters)
 
 
 def get_random_card(query: str) -> list:
@@ -37,6 +41,10 @@ def get_random_card(query: str) -> list:
     except requests.exceptions.RequestException as err:
         print("ERROR: ", err)
         return []
+
+
+#################
+# Return list of cards based on search query
 
 
 def get_card_list(query: str) -> list:
@@ -106,6 +114,40 @@ def show_warnings(res):
         print(f"WARNING [LIST REQ]: {warnings}")
 
 
+######################
+# Retreive List of Set Releases
+
+
+def check_date_past(date_to_check) -> str:
+    # check the release date against today's date to see if its past or future
+    date_to_check = datetime.date(datetime.fromisoformat(date_to_check))
+    current_date = datetime.date(datetime.today())
+    if current_date >= date_to_check:
+        return "Past"
+    else:
+        return "Future"
+
+
+def is_current_release(date_A: datetime, date_B: datetime) -> str:
+    if check_date_past(date_A) == "Future" and check_date_past(date_B) == "Past":
+        return "*"
+    else:
+        return "-"
+
+
+def find_current_release(setlist: list) -> dict:
+    for i, item in enumerate(setlist):
+        if i > 0:
+            check = is_current_release(
+                setlist[i - 1]["release_date"], setlist[i]["release_date"]
+            )
+            if check == "*":
+                return dict(item)
+
+    print("Current release not found")
+    return {}
+
+
 def set_codes() -> list:
     endpoint = "/sets"
 
@@ -127,15 +169,18 @@ def set_codes() -> list:
 
             # TODO: like the card_transform, this would be better to define as a dict, rather than a list
             for set_info in setlist_data:
-                setlist.append(
-                    [
-                        set_info.get("code"),
-                        set_info.get("name"),
-                        set_info.get("released_at"),
-                        set_info.get("set_type"),
-                        set_info.get("card_count"),
-                    ]
-                )
+                released = set_info.get("released_at")
+                set_type = set_info.get("set_type")
+                if set_type == "expansion" or set_type == "commander":
+                    setlist.append(
+                        {
+                            "set_code": set_info.get("code").upper(),
+                            "name": set_info.get("name"),
+                            "release_date": released,
+                            # "set_type": set_info.get("set_type"),
+                            "card_count": set_info.get("card_count"),
+                        }
+                    )
             return setlist
         else:
             print(
