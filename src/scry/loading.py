@@ -27,4 +27,4 @@ class Loading:
 
     def end(self):
         self.waiting = False
-        print(f"\r{" "*(len(self.message)+2)}\r", flush=True)
+        print(f"\r{" "*(len(self.message)+2)}\r", end="", flush=True)
