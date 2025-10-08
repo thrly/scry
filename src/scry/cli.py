@@ -147,10 +147,10 @@ def handle_set(args, db_connection):
     else:
         query_setcode = str(args.set_query)
         print(
-            f"Stats for \033[1m{lookup_set_info("name", args.set_query.upper())}\033[0m"
+            f"Stats for \033[1m{lookup_set_info("name", args.set_query.upper()).upper()}\033[0m"
         )
 
-    query = f"set:{query_setcode} unique:prints"  # unique:prints includes variations within set
+    query = f"set:{query_setcode}"  # unique:prints includes variations within set, otherwise only unique cards
 
     card_list = get_card_list(query) or []
     stamp = get_timestamp()
@@ -166,9 +166,11 @@ def handle_set(args, db_connection):
     loading.end()
 
     print(
-        f" \x1b[3m Released: {set_release_details[0]}\n  {set_release_details[1]} cards in set ({set_release_details[2]} unique cards)\n \033[0m"
+        f"""
+\x1b[3m  Released: {set_release_details[0]}
+  {set_release_details[1]} cards in set
+  (Showing {set_release_details[2]} unique cards only)\n \033[0m"""
     )
-
     print_stats(connection, stamp)
 
 
