@@ -2,6 +2,10 @@
 
 Leveraging [scryfall](https://scryfall.com/docs/api) to get stats for MTG cards
 
+<p align="center">
+  <img src="./img/scry-screenshot.png" alt="example screenshot" width="50%">
+</p>
+
 ## setup
 
 Clone and install with `pipx install scry`
