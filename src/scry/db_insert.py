@@ -17,11 +17,6 @@ def insert_cards(cards: list, timestamp: datetime, connection) -> int:
         cursor.executemany(insert_query, rows)
         connection.commit()
 
-        if len(cards) > 1:
-            print(f"Added {len(cards)} cards into database.")
-        else:
-            print(f"Added '{cards[0]['name']}' into database.")
-
         return len(cards)
     except Exception as err:
         print(f"Error occured talking to database: {err}")
