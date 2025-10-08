@@ -1,5 +1,7 @@
 import argparse
 from datetime import datetime
+
+from scry.request import find_current_release
 from . import (
     get_random_card,
     insert_cards,
@@ -8,21 +10,21 @@ from . import (
     get_total_cards,
     clear_database,
     set_codes,
-    db_connect,
 )
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
     # setup parser and sub command parsers
     parser = argparse.ArgumentParser(
-        description="🃏 Query cards from Scryfall and draw stats from a set.",
+        description="🃏 Stats for card sets from Scryfall.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             """
     Examples:
-        scry random -n 3
-        scry search t:creature c:g
+        scry setlist
         scry set BLB
+        scry set latest
+        scry search t:creature c:green legal:modern
     """
         ),
     )
@@ -56,7 +58,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     list_parser.add_argument(
         "search_query",
         nargs="+",
-        help="Argument as Scryfall-syntax search query (e.g. 't:creature+c:green')",
+        help="Arguments as Scryfall-syntax search query (e.g. 't:creature c:green')",
         # TODO: is it possible to set a default value if no query arg is given? 't:land' etc.
     )
     list_parser.set_defaults(func=handle_search)
@@ -65,16 +67,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
     set_parser = subparsers.add_parser("set")
     set_parser.add_argument(
         "set_query",
-        help="Specify setcode (run `scry setcodes` for reference) or 'latest'",
+        help="Specify setcode (run `scry setlist` for reference) or 'latest'",
     )
     set_parser.set_defaults(func=handle_set)
 
-    # SETCODES ------------------------
-    setcodes_parser = subparsers.add_parser(
-        "setcodes",
+    # SETLIST ------------------------
+    setlist_parser = subparsers.add_parser(
+        "setlist",
         help="Return list of sets with code, card total, and year of release",
     )
-    setcodes_parser.set_defaults(func=handle_setcodes)
+    setlist_parser.set_defaults(func=handle_setlist)
 
     # STATS -----------------------
     stats_parser = subparsers.add_parser(
@@ -98,7 +100,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def handle_random(args):
+################
+# Command handlers
+#
+
+
+def handle_random(args, db_connection):
     if args.number == 1:
         print("Drawing a random card from Scryfall.com...")
     else:
@@ -107,64 +114,75 @@ def handle_random(args):
     query = ""  # TODO: add optional search flag to random argparse
 
     # get a single random card, based on search parameters
-    connection = db_connect()
     card = get_random_card(query) or []
-    insert_cards(card, get_timestamp(), connection)
-    print(get_total_cards(connection), "cards currently in database.")
+    insert_cards(card, get_timestamp(), db_connection)
+    print(get_total_cards(db_connection), "cards currently in database.")
 
 
-def handle_search(args):
+def handle_search(args, db_connection):
     query = " ".join(args.search_query)
     print(f"Searching for cards matching: {query}")
 
-    connection = db_connect()
     card_list = get_card_list(query) or []
     stamp = get_timestamp()
-    insert_cards(card_list, stamp, connection)
-    print(get_total_cards(connection), "cards currently in database.")
-    print(
-        f"================================================\nSTATS for '{args.search_query}':"
-    )
-    print_stats(connection, stamp)
+    insert_cards(card_list, stamp, db_connection)
+    # print(get_total_cards(db_connection), "cards currently in database.")
+    print(f"{len(card_list)} cards found.")
+    print_stats(db_connection, stamp)
 
 
-def handle_set(args):
+def handle_set(args, db_connection):
     # Search for a set of cards
-    connection = db_connect()
-
+    connection = db_connection
+    query_setcode = ""
     if args.set_query.lower() == "latest":
-        print("Finding the latest set...")
-        # TODO: find out how to find the latest set...
+        # Find the moce recent release and query stats for it
+        current_set = find_current_release(set_codes())
+        current_set_code = current_set.get("set_code")
+        query_setcode = str(current_set_code)
+        current_set_name = current_set.get("name")
+        print(f"Stats for {current_set_name} ({current_set_code}):")
     else:
-        print(f"Stats for set {args.set_query.upper()}:")
+        query_setcode = str(args.set_query)
+        print(f"Stats for {lookup_set_info("name", args.set_query.upper())}")
 
-    query = f"set:{args.set_query}"
+    query = f"set:{query_setcode} unique:prints"  # unique:prints includes variations within set
+
+    print(f"  Released: {lookup_set_info("release_date", query_setcode.upper())}")
+
+    print(f"  {lookup_set_info("card_count", query_setcode.upper())} cards in set")
+
     card_list = get_card_list(query) or []
     stamp = get_timestamp()
-    # HACK: since we know its a set, we could just query sets directly from scryfall?
+
     insert_cards(card_list, stamp, connection)
     print_stats(connection, stamp)
 
 
-def handle_setcodes(args):
-    print("All main and commander MTG expansions:")
+def handle_setlist(args, db_connection):
+    print("All Main and Commander MTG expansion sets:\n")
+    setlist = set_codes()
+    current_set = find_current_release(setlist)
+    for set_info in setlist:
+        print(
+            format_set_info(set_info),
+            end="",
+        )
+        if set_info == current_set:
+            print(" <- current release")
+        else:
+            print()
 
-    for set_code in set_codes():
-        if set_code[3] == "expansion" or set_code[3] == "commander":
-            # extract year from YYYY-MM-DD
-            date = datetime.fromisoformat(set_code[2])
-            print(
-                f"{set_code[0].upper(): <5} {set_code[1]:<40} {set_code[4]:>6} cards {date.year:>10}"
-            )
 
-
-def handle_stats(args):
+def handle_stats(args, db_connection):
     print("STATS for ALL cards in database:")
-    connection = db_connect()
-    print_stats(connection)
+    print(get_total_cards(db_connection), "cards in database")
+    print_stats(db_connection)
 
 
-def handle_clear(args):
+def handle_clear(args, db_connection):
+    # HACK: why does this only work with db_connection and args, even though neither
+    # are required? Same with handle_setlist...
     clear_database()
 
 
@@ -175,6 +193,19 @@ def print_stats(connection, timestamp=None):
     stats = db_stats(connection, timestamp)
     for s in stats:
         print(s)
+
+
+def format_set_info(set_details) -> str:
+    date = datetime.fromisoformat(set_details["release_date"])
+    return f"{set_details["set_code"]: <5} {set_details["name"]:<38} {set_details["card_count"]:>6} cards {date.year:>10}"
+
+
+def lookup_set_info(info: str, set_code: str) -> str:
+    setlist = set_codes()
+    for s in setlist:
+        if set_code == s["set_code"]:
+            return s[info]
+    return "Set info not found. Check the setcode is correct. You can request name, card_count, release_date"
 
 
 def get_timestamp():
