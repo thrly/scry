@@ -6,6 +6,7 @@ from .loading import Loading
 
 url = "https://api.scryfall.com"
 headers = {"User-Agent": "scry-thrly/0.1", "Accept": "*/*"}
+TIMEOUT = (6.05, 20)
 
 # NOTE: scryfall returns an 'object : card/list` which could be used to detemine how to display/add single/lists of cards
 
@@ -19,7 +20,9 @@ def get_random_card(query: str) -> list:
 
     try:
 
-        res = requests.get(url + endpoint + clean_query, headers=headers, timeout=5)
+        res = requests.get(
+            url + endpoint + clean_query, headers=headers, timeout=TIMEOUT
+        )
         res.raise_for_status()
 
         card = res.json()
@@ -60,7 +63,7 @@ def get_card_list(query: str) -> list:
 
         req_url = url + endpoint + clean_query
         # print(f"Requesting from: {req_url}")
-        res = requests.get(req_url, headers=headers, timeout=3)
+        res = requests.get(req_url, headers=headers, timeout=TIMEOUT)
         res.raise_for_status()
 
         page_one = res.json()
@@ -80,7 +83,9 @@ def get_card_list(query: str) -> list:
             try:
                 sleep(0.11)  # just in case we ever call this in a loop
 
-                additional_res = requests.get(next_page, headers=headers, timeout=3)
+                additional_res = requests.get(
+                    next_page, headers=headers, timeout=TIMEOUT
+                )
                 additional_res.raise_for_status()
                 new_page_results = additional_res.json()
 
@@ -155,7 +160,7 @@ def set_codes() -> list:
 
     try:
         req_url = url + endpoint
-        res = requests.get(req_url, headers=headers, timeout=3)
+        res = requests.get(req_url, headers=headers, timeout=TIMEOUT)
         res.raise_for_status()
 
         response = res.json()
