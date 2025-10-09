@@ -1,11 +1,10 @@
 **/__pycache__/
 **/*.pyc
-data/cards.db
-
 build/
 
 *.egg-info
 
 .coverage
-tests.db
+data/
+**.db
 .pytest_cache

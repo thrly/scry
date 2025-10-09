@@ -3,13 +3,13 @@ import sqlite3
 from pathlib import Path
 from os import makedirs
 
-# set path (if required) for db
-path = makedirs("./data/", exist_ok=True)
+# set path (if required) for db: scry/data/cards.db
+path_to_root = Path(__file__).parent.parent.parent  # project root scry/
+makedirs(path_to_root / "data/", exist_ok=True)
 
 
-# TODO: this should accept an argument to enable "/tests/test.db"
 def db_connect():
-    return sqlite3.connect(Path("./data/cards.db"))
+    return sqlite3.connect(Path(path_to_root / "data" / "cards.db"))
 
 
 def create_table(connection):
@@ -27,6 +27,7 @@ def create_table(connection):
     cmc INTEGER, 
     price JSON,
     flavor_text TEXT,
+    rarity TEXT,
     added_at TEXT 
     )
     """
