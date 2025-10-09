@@ -26,7 +26,7 @@ def main(argv=None):
         args.func(args, connection)
 
     except Exception as err:
-        print("Error in __main__: ", err)
+        print("Error in main(): ", err)
     finally:
         connection.close()  # finally close db connection
 

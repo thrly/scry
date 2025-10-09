@@ -43,7 +43,7 @@ def db_stats(connection, stamp=None) -> list:
                 json_each(cards.color_identity) {timestamp_query}
                 GROUP BY value
                 ORDER BY color_count DESC
-        """
+            """
         )
         curve = cursor.fetchall()
         coloured_results = [[scryfall_colours(id), count] for id, count in curve]
@@ -61,7 +61,7 @@ def db_stats(connection, stamp=None) -> list:
                 {timestamp_query}
                 GROUP BY rarity
                 ORDER BY rarity_count DESC
-        """
+            """
         )
         curve = cursor.fetchall()
         stats.append(f" RARITY DISTRIBUTION:\n{chart_data(curve, total_cards)}")
@@ -75,15 +75,14 @@ def db_stats(connection, stamp=None) -> list:
 
         # Prices: highest and average
         stats.append(" PRICES:")
-        stats.append(
-            f"  Average Price is {report_prices(cursor,timestamp_query)[1]} EUR"
-        )
-        stats.append("\n".join(report_prices(cursor, timestamp_query)[0]))
+        price_info = report_prices(cursor, timestamp_query)
+        stats.append(f"  Average Price is {price_info[1]} EUR")
+        stats.append("\n".join(price_info[0]))
         stats.append("")
         return stats
 
     except Exception as err:
-        return ["Error occured talking to database:", {err}]
+        return ["Error occured talking to database for DB stats:", {err}]
 
 
 def get_total_cards(connection, timestamp=None) -> int | str:
@@ -114,11 +113,11 @@ def get_unique_cards(connection, timestamp=None) -> int | str:
             )
         return cursor.fetchone()[0]
     except Exception as err:
-        return f"Error occured talking to database getting Total: {err}"
+        return f"Error occured talking to database getting Unique cards: {err}"
 
 
-def chart_data(curve_data, total_cards):
-    if total_cards < 1:
+def chart_data(curve_data, total_cards) -> str:
+    if total_cards < 1 or curve_data is False:
         return "Could not chart data. Not enough cards."
     print_curve = ""
     percentage_steps = 2  # each block is x%
@@ -126,6 +125,8 @@ def chart_data(curve_data, total_cards):
 
     # get longest key as string (just for formatting alignment)
     chart_keys = [str(x) for x, _ in curve_data]
+    if chart_keys == []:
+        return "Not enough keys for data."
     max_key_string_length = len(max(chart_keys, key=len))
 
     # scale the bar charts
@@ -171,7 +172,7 @@ def report_card_types(timestamp_query=None):
     return (query, card_types)
 
 
-def report_prices(cursor, timestamp_query: str):
+def report_prices(cursor, timestamp_query: str) -> tuple:
     # TODO: this only takes into account non-foil card prices... if foil prices are
     # available (not always), they should also be included and aaveraged, though it might
     # skew the hightest prices?
@@ -189,9 +190,12 @@ def report_prices(cursor, timestamp_query: str):
     for item in highest_price:
         if item[0] not in top_price_dict.keys():
             top_price_dict[item[0]] = item[1]
-
     for card, price in top_price_dict.items():
-        card_price_info = f"  - {card:<35} {round(price,2):>10} EUR"
+        if price is None:
+            price = "---"
+        else:
+            price = round(price, 2)
+        card_price_info = f"  - {card:<35} {price:>10} EUR"
         top_prices.append(card_price_info)
         if len(top_prices) == 4:  # stop after three top prices + 1 for heading
             break
@@ -199,9 +203,13 @@ def report_prices(cursor, timestamp_query: str):
     cursor.execute(
         f"SELECT AVG(CAST(json_extract(price,'$.eur') AS REAL)) FROM cards {timestamp_query}"
     )
-    average_price = cursor.fetchone()[0]
+    avg_price = cursor.fetchone()[0]
+    if avg_price is None:
+        avg_price = "No prices found"
+    else:
+        avg_price = round(avg_price, 2)
 
-    return top_prices, round(average_price, 2)
+    return top_prices, avg_price
 
 
 def scryfall_colours(reference: str) -> str:
