@@ -32,7 +32,7 @@ def db_stats(connection, stamp=None) -> list:
             f"SELECT cmc, COUNT(*) as Mana FROM cards {timestamp_query} GROUP BY cmc"
         )
         curve = cursor.fetchall()
-        stats.append(f"MANA CURVE:\n{chart_data(curve, total_cards)}")
+        stats.append(f" MANA CURVE:\n{chart_data(curve, total_cards)}")
 
         # Colour distribution
         cursor.execute(
@@ -45,25 +45,38 @@ def db_stats(connection, stamp=None) -> list:
                 ORDER BY color_count DESC
         """
         )
-
         curve = cursor.fetchall()
         coloured_results = [[scryfall_colours(id), count] for id, count in curve]
 
         stats.append(
-            f"COLOUR DISTRIBUTION:\n{chart_data(coloured_results, total_cards)}"
+            f" COLOUR DISTRIBUTION:\n{chart_data(coloured_results, total_cards)}"
         )
+
+        # Rarity distribution
+        cursor.execute(
+            f"""SELECT
+                rarity,
+                COUNT(rarity) AS rarity_count
+                FROM cards
+                {timestamp_query}
+                GROUP BY rarity
+                ORDER BY rarity_count DESC
+        """
+        )
+        curve = cursor.fetchall()
+        stats.append(f" RARITY DISTRIBUTION:\n{chart_data(curve, total_cards)}")
 
         # Tally of card types
         cursor.execute(
             report_card_types(timestamp_query)[0], report_card_types(timestamp_query)[1]
         )
         curve = cursor.fetchall()
-        stats.append(f"CARD TYPES:\n{chart_data(curve, total_cards)}")
+        stats.append(f" CARD TYPES:\n{chart_data(curve, total_cards)}")
 
         # Prices: highest and average
-        stats.append("PRICES:\n")
+        stats.append(" PRICES:")
         stats.append(
-            f"  Average Price is {report_prices(cursor,timestamp_query)[1]} EUR\n"
+            f"  Average Price is {report_prices(cursor,timestamp_query)[1]} EUR"
         )
         stats.append("\n".join(report_prices(cursor, timestamp_query)[0]))
         stats.append("")
@@ -107,7 +120,7 @@ def get_unique_cards(connection, timestamp=None) -> int | str:
 def chart_data(curve_data, total_cards):
     if total_cards < 1:
         return "Could not chart data. Not enough cards."
-    print_curve = "\n"
+    print_curve = ""
     percentage_steps = 2  # each block is x%
     scale = 100 / total_cards
 
