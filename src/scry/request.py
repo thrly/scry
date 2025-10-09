@@ -167,11 +167,19 @@ def set_codes() -> list:
 
             setlist = []
 
-            # TODO: like the card_transform, this would be better to define as a dict, rather than a list
             for set_info in setlist_data:
                 released = set_info.get("released_at")
                 set_type = set_info.get("set_type")
-                valid_sets = ["expansion", "commander", "draft_innovation"]
+                # define the types of sets to show (expansion, core, draft_innovation seem to be the main ones)
+                valid_sets = [
+                    "expansion",
+                    "commander",
+                    "draft_innovation",
+                    "core",
+                    # "box",
+                    "masters",
+                    "arsenal",
+                ]
                 if set_type in valid_sets:
                     setlist.append(
                         {
