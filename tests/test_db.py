@@ -3,11 +3,12 @@ import datetime
 from src.scry.db_setup import create_table
 from src.scry.db_insert import insert_cards
 from tests.sample_card import sample_card
+from pathlib import Path
 
 
 def test_card_insert_and_get():
-
-    connection = sqlite3.connect("./tests/tests.db")
+    path_test_db = Path(__file__).parent
+    connection = sqlite3.connect(Path(path_test_db) / "tests.db")
     try:
         create_table(connection)
 
@@ -25,7 +26,7 @@ def test_card_insert_and_get():
         assert card[3] == "{T}: Add {G}."  # oracle_text
         assert card[4] == '["G"]'  # color_identity
         assert card[5] == '["G"]'  # colors
-        assert card[6] == "fdn"  # set
+        assert card[6] == "FDN"  # set
         assert card[7] == "{G}"  # mana_cost
         assert card[8] == 1.0  # cmc
 

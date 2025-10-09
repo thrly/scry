@@ -15,7 +15,7 @@ def test_transform_card_pulls_correct_values():
     assert card["oracle_text"] == "{T}: Add {G}."  # oracle_text
     assert card["color_identity"] == '["G"]'  # color_identity
     assert card["colors"] == '["G"]'  # colors
-    assert card["set_code"] == "fdn"  # set
+    assert card["set_code"] == "FDN"  # set
     assert card["mana_cost"] == "{G}"  # mana_cost
     assert card["cmc"] == 1.0  # cmc
     assert (
