@@ -78,6 +78,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "setlist",
         help="Return list of sets with code, card total, and year of release",
     )
+    setlist_parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="Return a full list of set releases including bonus sets, boxes, memorabilia, etc.",
+    )
     setlist_parser.set_defaults(func=handle_setlist)
 
     # STATS -----------------------
@@ -175,8 +181,11 @@ def handle_set(args, db_connection):
 
 
 def handle_setlist(args, db_connection):
-    print("All Main and Commander MTG expansion sets:\n")
-    setlist = set_codes()
+    if include_all_sets := args.all:
+        print("All release sets:", include_all_sets)
+    else:
+        print("All Main and Commander MTG expansion sets:\n")
+    setlist = set_codes(include_all_sets)
     current_set = find_current_release(setlist)
     for set_info in setlist:
         print(
@@ -187,6 +196,8 @@ def handle_setlist(args, db_connection):
             print(" <- current release")
         else:
             print()
+
+    print(f"\nShowing {len(setlist)} sets")
 
 
 def handle_stats(args, db_connection):

@@ -153,7 +153,7 @@ def find_current_release(setlist: list) -> dict:
     return {}
 
 
-def set_codes() -> list:
+def set_codes(include_all_sets=False) -> list:
     endpoint = "/sets"
 
     sleep(0.1)  # just in case we ever call this in a loop
@@ -175,26 +175,29 @@ def set_codes() -> list:
             for set_info in setlist_data:
                 released = set_info.get("released_at")
                 set_type = set_info.get("set_type")
-                # define the types of sets to show (expansion, core, draft_innovation seem to be the main ones)
-                valid_sets = [
+                # define the types of sets to show (expansion, core, draft_innovation
+                # seem to be the main ones)
+                main_sets = [
                     "expansion",
                     "commander",
                     "draft_innovation",
                     "core",
-                    # "box",
                     "masters",
                     "arsenal",
                 ]
-                if set_type in valid_sets:
-                    setlist.append(
-                        {
-                            "set_code": set_info.get("code").upper(),
-                            "name": set_info.get("name"),
-                            "release_date": released,
-                            # "set_type": set_info.get("set_type"),
-                            "card_count": set_info.get("card_count"),
-                        }
-                    )
+                values_to_store = {
+                    "set_code": set_info.get("code").upper(),
+                    "name": set_info.get("name"),
+                    "release_date": released,
+                    # "set_type": set_info.get("set_type"),
+                    "card_count": set_info.get("card_count"),
+                }
+                # if include_all_sets flag given, store all sets,
+                # otherwise filter to main_sets
+                if include_all_sets:
+                    setlist.append(values_to_store)
+                elif set_type in main_sets:
+                    setlist.append(values_to_store)
             return setlist
         else:
             print(
