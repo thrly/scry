@@ -4,12 +4,13 @@ from src.scry.db_setup import create_table
 from src.scry.db_insert import insert_cards
 from tests.sample_card import sample_card
 from pathlib import Path
+from contextlib import closing
 
 
 def test_card_insert_and_get():
     path_test_db = Path(__file__).parent
-    connection = sqlite3.connect(Path(path_test_db) / "tests.db")
-    try:
+    with closing(sqlite3.connect(Path(path_test_db) / "tests.db")) as connection:
+
         create_table(connection)
 
         assert insert_cards([sample_card()], datetime.datetime.now(), connection) == 1
@@ -30,5 +31,5 @@ def test_card_insert_and_get():
         assert card[7] == "{G}"  # mana_cost
         assert card[8] == 1.0  # cmc
 
-    finally:
-        connection.close()
+        cursor.execute("DROP TABLE cards;")
+        # TODO: look into pytest's fixtures for automatic teardown/cleanup

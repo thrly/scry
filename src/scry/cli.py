@@ -209,7 +209,7 @@ def handle_stats(args, db_connection):
 def handle_clear(args, db_connection):
     # HACK: why does this only work with db_connection and args, even though neither
     # are required? Same with handle_setlist...
-    clear_database()
+    clear_database(db_connection)
 
 
 # Helper functions:
