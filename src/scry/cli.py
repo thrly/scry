@@ -3,7 +3,7 @@ from datetime import datetime
 
 from scry.db_queries import get_unique_cards
 from scry.loading import Loading
-from scry.request import find_current_release, check_date_past
+from scry.request import find_current_release, check_date_past, get_set_info
 from . import (
     get_random_card,
     insert_cards,
@@ -140,43 +140,44 @@ def handle_search(args, db_connection):
 
 
 def handle_set(args, db_connection):
-    # Search for a set of cards
+    # Searches for a specific set of cards
+
     connection = db_connection
-    query_setcode = ""
-    if args.set_query.lower() == "latest":
-        # Find the moce recent release and query stats for it
-        current_set = find_current_release(set_codes())
-        current_set_code = current_set.get("set_code")
-        query_setcode = str(current_set_code)
-        current_set_name = current_set.get("name")
-        print(f"Stats for {current_set_name} ({current_set_code}):")
-    else:
-        query_setcode = str(args.set_query)
-        print(
-            f"Stats for \033[1m{lookup_set_info("name", args.set_query.upper()).upper()}\033[0m"
-        )
-
-    query = f"set:{query_setcode}"  # unique:prints includes variations within set, otherwise only unique cards
-
-    card_list = get_card_list(query) or []
-    stamp = get_timestamp()
-
-    insert_cards(card_list, stamp, connection)
 
     # loading animation
     loading = Loading().start()
-    set_release_details = []
-    set_release_details.append(lookup_set_info("release_date", query_setcode.upper()))
-    set_release_details.append(lookup_set_info("card_count", query_setcode.upper()))
-    set_release_details.append(get_unique_cards(connection, stamp))
+
+    # use setcode, or find setcode of "latest" set
+    query_setcode = ""
+    if args.set_query.lower() == "latest":
+        # Find the most recent release and query stats for it
+        current_set = find_current_release(set_codes())
+        query_setcode = str(current_set.get("set_code"))
+    else:
+        query_setcode = str(args.set_query)
+
+    # request general set info from /set:code
+    set_info = get_set_info(query_setcode)
+
+    set_name = set_info.get("name")
+    set_date = set_info.get("released_at")
+    set_count = set_info.get("card_count")
+
+    # request list of cards from set
+    # optionally append `unique:prints` for variations within set
+    setlist_query = f"set:{query_setcode}"
+    card_list = get_card_list(setlist_query) or []
+    stamp = get_timestamp()
+    insert_cards(card_list, stamp, connection)
+
     loading.end()
 
-    print(
-        f"""
-\x1b[3m  Released: {set_release_details[0]}
-  {set_release_details[1]} cards in set
-  (Showing {set_release_details[2]} unique cards only)\n \033[0m"""
-    )
+    print(f"Stats for \033[1m{set_name} ({query_setcode.upper()})\033[0m")
+    print(f"\x1b[3m  Released: {set_date}")
+    print(f"  {set_count} cards in set")
+    print(f"  Showing {get_unique_cards(connection,stamp)} unique cards\n \033[0m")
+
+    # finally show stats for the set
     print_stats(connection, stamp)
 
 
@@ -229,14 +230,6 @@ def format_set_info(set_details) -> str:
     else:
         fdate = set_details["release_date"]
     return f"{set_details["set_code"]: <5} {set_details["name"]:<45} {set_details["card_count"]:>6} cards {fdate:>14}"
-
-
-def lookup_set_info(info: str, set_code: str) -> str:
-    setlist = set_codes()
-    for s in setlist:
-        if set_code == s["set_code"]:
-            return s[info]
-    return "Set info not found. Check the setcode is correct. You can request name, card_count, release_date"
 
 
 def get_timestamp():

@@ -208,3 +208,30 @@ def set_codes(include_all_sets=False) -> list:
     except requests.exceptions.RequestException as err:
         print("Setlist ERROR: ", err)
         return []
+
+
+def get_set_info(set_code: str) -> dict:
+    endpoint = "/sets/"
+
+    sleep(0.1)  # just in case we ever call this in a loop
+
+    try:
+        req_url = url + endpoint + set_code
+        res = requests.get(req_url, headers=headers, timeout=TIMEOUT)
+        res.raise_for_status()
+
+        response = res.json()
+
+        show_warnings(response)
+
+        if res.status_code == 200:
+            return response
+        else:
+            print(
+                "Something may have gone wrong getting info about the set. Status Code: ",
+                res.status_code,
+            )
+            return {}
+    except requests.exceptions.RequestException as err:
+        print("Setlist ERROR: ", err)
+        return {}
