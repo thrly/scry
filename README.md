@@ -8,7 +8,7 @@ Leveraging [scryfall](https://scryfall.com/docs/api) to get stats for MTG cards
 
 ## setup
 
-Clone and install with `pipx install scry`
+Clone and install with `pipx install .`
 
 ## use
 
@@ -24,7 +24,7 @@ Clone and install with `pipx install scry`
 
 Scry creates a local sqlite database and adds your queried cards to it. This means you can build a larger collection of cards by executing multiple searches, and then view stats for the entire database with `scry stats`
 
-To clear your database (for instance, to start a fresh collection to view stats on), run `scry clear` and confirm at the prompt.
+This also may lead to large database files with a lot of sets. To clear your database (for instance, to start a fresh collection to view stats on), run `scry clear` and confirm at the prompt.
 
 ## about
 
