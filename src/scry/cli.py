@@ -148,20 +148,21 @@ def handle_set(args, db_connection):
     loading = Loading().start()
 
     # use setcode, or find setcode of "latest" set
-    query_setcode = ""
     if args.set_query.lower() == "latest":
-        # Find the most recent release and query stats for it
         current_set = find_current_release(set_codes())
         query_setcode = str(current_set.get("set_code"))
+
+        set_name = current_set.get("name")
+        set_date = current_set.get("released_at")
+        set_count = current_set.get("card_count")
     else:
         query_setcode = str(args.set_query)
 
-    # request general set info from /set:code
-    set_info = get_set_info(query_setcode)
-
-    set_name = set_info.get("name")
-    set_date = set_info.get("released_at")
-    set_count = set_info.get("card_count")
+        # request specific set info from /set:code
+        set_info = get_set_info(query_setcode)
+        set_name = set_info.get("name")
+        set_date = set_info.get("released_at")
+        set_count = set_info.get("card_count")
 
     # request list of cards from set
     # optionally append `unique:prints` for variations within set
