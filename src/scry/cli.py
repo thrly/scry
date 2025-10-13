@@ -3,7 +3,7 @@ from datetime import datetime
 
 from scry.db_queries import get_unique_cards
 from scry.loading import Loading
-from scry.request import find_current_release
+from scry.request import find_current_release, check_date_past
 from . import (
     get_random_card,
     insert_cards,
@@ -222,8 +222,13 @@ def print_stats(connection, timestamp=None):
 
 
 def format_set_info(set_details) -> str:
-    date = datetime.fromisoformat(set_details["release_date"])
-    return f"{set_details["set_code"]: <5} {set_details["name"]:<45} {set_details["card_count"]:>6} cards {date.year:>10}"
+    if check_date_past(set_details["release_date"]) == "Past":
+        # only give year for past releases
+        date = datetime.fromisoformat(set_details["release_date"])
+        fdate = date.year
+    else:
+        fdate = set_details["release_date"]
+    return f"{set_details["set_code"]: <5} {set_details["name"]:<45} {set_details["card_count"]:>6} cards {fdate:>14}"
 
 
 def lookup_set_info(info: str, set_code: str) -> str:
