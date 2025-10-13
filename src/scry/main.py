@@ -29,7 +29,3 @@ def main(argv=None):
         print("Error in main(): ", err)
     finally:
         connection.close()  # finally close db connection
-
-
-if __name__ == "__main__":
-    main()
