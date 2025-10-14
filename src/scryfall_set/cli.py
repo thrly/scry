@@ -1,9 +1,9 @@
 import argparse
 from datetime import datetime
 
-from scry.db_queries import get_unique_cards
-from scry.loading import Loading
-from scry.request import find_current_release, check_date_past, get_set_info
+from scryfall_set.db_queries import get_unique_cards
+from scryfall_set.loading import Loading
+from scryfall_set.request import find_current_release, check_date_past, get_set_info
 from . import (
     get_random_card,
     insert_cards,
