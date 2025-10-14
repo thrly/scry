@@ -1,7 +1,7 @@
 import sqlite3
 import datetime
-from src.scry.db_setup import create_table
-from src.scry.db_insert import insert_cards
+from src.scryfall_set.db_setup import create_table
+from src.scryfall_set.db_insert import insert_cards
 from tests.sample_card import sample_card
 from pathlib import Path
 from contextlib import closing
