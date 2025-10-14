@@ -1,6 +1,6 @@
 [project]
 name = "scryfall-set"
-version = "0.1"
+version = "0.2"
 description = "Overview stats for MTG sets and searches using the Scryfall API"
 dependencies = [
   "requests",
